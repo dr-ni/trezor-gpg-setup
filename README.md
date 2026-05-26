@@ -1,281 +1,241 @@
-# Trezor GPG Key Setup for Git Commit Signing
+# Onboard 1.4.4-2
 
-This document describes the complete setup, usage, and recovery of a GPG key based on the **Trezor Model T** for signing Git commits.
+![onb](https://github.com/onboard-osk/onboard/blob/main/onboard.png)
 
----
+![onb](https://github.com/onboard-osk/onboard/blob/main/Onboard.gif)
 
-## Prerequisites
+## Description
 
-- Trezor Model T
-- Ubuntu / Debian Linux
-- Python 3.10+
-- Git 2.x
-- `pip3` available
+Onboard is an on-screen keyboard designed for users who cannot easily use a physical keyboard, including tablet users and people with mobility impairments. It works out of the box without requiring manual configuration, automatically reading the keyboard layout from the X server.
 
----
+Onboard supports both X11/Xorg and Wayland. Native Wayland key injection is provided via the `zwp\_virtual\_keyboard\_unstable\_v1` protocol, supported by sway, KDE Plasma \>= 5.25, GNOME \>= 45, Hyprland, labwc, and other wlroots-based compositors.
 
-## 1. Installation
+To run on Wayland:
 
-### 1.1 Install trezor-agent
-
-```bash
-pip3 install trezor-agent --break-system-packages
+```
+    GDK\_BACKEND=wayland ONBOARD\_ALLOW\_WAYLAND=1 onboard
 ```
 
-### 1.2 Add to PATH
+See [README\_Wayland.md](file:///home/uwe/onboard/README_Wayland.md) for full setup instructions, compositor compatibility, and known limitations.
 
-The installed scripts land in `~/.local/bin` — add permanently to your shell:
+## Building from Source
 
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+Find below short instructions on how to build Onboard straight from this github repository. If you have improvements to share, get errors or run into other problems, please let us know. Build instructions for new distributions are always welcome too.
+
+### !!! First uninstall ALL onboard and mousetweaks packages !!!
+
+## Ubuntu and Debian:
+
+```
+    \# Uninstall  
+    sudo apt purge onboard onboard-common onboard-data  
+    sudo apt purge mousetweaks  
+  
+    \# Note: It is recommended to build and install Debian packages see below.  
+  
+    \# Install dependencies  
+    sudo apt install git build-essential python3-packaging python3-dev  
+    sudo apt install dh-python python3-distutils-extra devscripts pkg-config  
+    sudo apt install libgtk-3-dev libxtst-dev libxkbfile-dev libdconf-dev libcanberra-dev  
+    sudo apt install libhunspell-dev libudev-dev  
+    sudo apt install python3-gi-cairo  
+    sudo apt install libwayland-dev wayland-protocols libxkbcommon-dev  
+  
+    Next step is "Build and Install from Source"
 ```
 
-### 1.3 Verify installation
+## Arch Linux:
 
-```bash
-trezor-gpg --version
-trezorctl version
+```
+    \# Uninstall  
+    sudo pacman -S mousetweaks  
+    sudo pacman -S onboard  
+      
+    \# Install dependencies  
+    pacman -S base-devel git python-packaging python-distutils-extra dconf gtk3 \\  
+    libcanberra hunspell python-gobject gsettings-desktop-schemas \\  
+    iso-codes python-cairo librsvg python-dbus dbus-glib \\  
+    wayland wayland-protocols libxkbcommon  
+  
+    Next step is "Build and Install from Source"
 ```
 
----
+## Mageia:
 
-## 2. Create GPG Key
-
-### 2.1 Connect Trezor
-
-Plug in the Trezor Model T via USB and unlock it (enter PIN).
-
-### 2.2 Generate key
-
-```bash
-trezor-gpg init --time=0 "First Last <email@example.com>"
+```
+    \# Install dependencies  
+    urpmi git gcc-c++ lib64zlib-devel python3-distutils-extra  
+    urpmi libgtk+3.0-devel libxtst-devel libxkbfile-devel libdconf-devel  
+    urpmi libhunspell-devel libcanberra-devel libpython3-devel intltool  
+    \# more or less optional, but recommended for full functionality  
+    urpmi lib64atspi-gir2.0 at-spi2-core-qt python3-dbus qtatspi-plugin  
+  
+    Next step is "Build and Install from Source"
 ```
 
-> **Important:** Always use `--time=0`. This sets the key creation timestamp to Unix Epoch (1970-01-01), which allows you to regenerate the **exact same key** on any machine at any time — as long as you have the Trezor seed.
->
-> To verify your timestamp:
-> ```bash
-> GNUPGHOME=~/.gnupg-trezor gpg --list-keys --with-colons | grep "^pub"
-> ```
-> A date of `1970-01-01` confirms `--time=0` was used.
-> If you did not use `--time=0` during the first `init`, note the exact timestamp printed in the output.
+## Fedora Xfce:
 
-The key is stored in `~/.gnupg-trezor`. If the directory already exists, remove it first:
-
-```bash
-rm -rf ~/.gnupg-trezor
-trezor-gpg init "First Last <email@example.com>"
+```
+    \# Install dependencies  
+    sudo dnf install python3-distutils-extra dconf-devel intltool  
+    sudo dnf install libcanberra-devel libxkbfile-devel libXtst-devel  
+    sudo dnf install hunspell-devel python3-devel intltool gcc-c++ gcc  
+    sudo dnf install 'pkgconfig(udev)' 'pkgconfig(libudev)'  
+    sudo dnf install wayland-devel wayland-protocols-devel libxkbcommon-devel  
+  
+    Next step is "Build and Install from Source"
 ```
 
-### 2.3 Set GNUPGHOME permanently
+## openSUSE Xfce:
 
-```bash
-echo 'export GNUPGHOME="$HOME/.gnupg-trezor"' >> ~/.bashrc
-source ~/.bashrc
+```
+    \# Install dependencies  
+    sudo zypper install python3-distutils-extra dconf-devel intltool  
+    sudo zypper install libcanberra-devel libxkbfile-devel libXtst-devel  
+    sudo zypper install hunspell-devel python3-devel intltool gcc-c++ gcc  
+    sudo zypper install 'pkgconfig(udev)' 'pkgconfig(libudev)'  
+    sudo zypper install wayland-devel wayland-protocols-devel libxkbcommon-devel  
+  
+    Next step is "Build and Install from Source"
 ```
 
-### 2.4 Note the key fingerprint
+## FreeBSD (not officially supported)
 
-```bash
-GNUPGHOME=~/.gnupg-trezor gpg --list-keys
+```
+    See \`README.FreeBSD.md\` for build instructions.
 ```
 
-Example output:
+## Build and Install from Source
+
 ```
-sec   nistp256 1970-01-01 [SC]
-      0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
-uid           [ultimate] Uwe Niethammer <68241100+dr-ni@users.noreply.github.com>
-ssb   nistp256 1970-01-01 [E]
-```
-
-Keep the fingerprint `0D51A98F...` in a safe place.
-
----
-
-## 3. Configure Git
-
-```bash
-# Set signing key
-git config --global user.signingkey 0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
-
-# Sign all commits automatically
-git config --global commit.gpgsign true
-
-# GPG wrapper so Git uses the correct GNUPGHOME
-cat > ~/.local/bin/trezor-gpg-wrapper << 'WRAPPER'
-#!/bin/bash
-export GNUPGHOME="$HOME/.gnupg-trezor"
-exec gpg "$@"
-WRAPPER
-chmod +x ~/.local/bin/trezor-gpg-wrapper
-
-git config --global gpg.program trezor-gpg-wrapper
+    git clone https://github.com/onboard-osk/onboard  
+    cd onboard  
+    python3 setup.py clean  
+    python3 setup.py build  
+      
+    \# System-wide installation (requires root access):  
+    sudo python3 setup.py install
 ```
 
-### 3.1 Verify configuration
+## Uninstall if installed from Source
 
-```bash
-git config --global --list | grep -E "gpg|sign"
+```
+    \# System-wide uninstall (requires root access):  
+    sudo python3 setup.py uninstall
 ```
 
-Expected output:
-```
-gpg.program=trezor-gpg-wrapper
-user.signingkey=0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
-commit.gpgsign=true
-```
+## Build and Install Debian Packages
 
----
+To build Debian packages from the source, two scripts are available:
 
-## 4. Add Public Key to GitHub
+- `build\_debs.sh`: Creates the `.deb` packages and related metadata.
 
-### 4.1 Export public key
+- `apt\_install\_debs.sh`: Sets up a local repository and installs the packages on a target system.
 
-```bash
-GNUPGHOME=~/.gnupg-trezor gpg --export --armor 0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
-```
 
-### 4.2 Add to GitHub
+### Notes
 
-1. Open https://github.com/settings/keys
-2. Click **"New GPG key"**
-3. Paste the entire block from `-----BEGIN PGP PUBLIC KEY BLOCK-----` to `-----END PGP PUBLIC KEY BLOCK-----`
-4. Click **"Add GPG key"**
+- Both scripts automatically use `sudo` to install dependencies or packages.
 
----
+- Ensure you have `sudo` privileges and be ready to enter your password when prompted during execution.
 
-## 5. Test Signing
 
-```bash
-# Connect and unlock Trezor
-git commit --allow-empty -m "test: GPG signing with Trezor"
-git log --show-signature -1
+### Build Debian Packages
+
+The `build\_debs.sh` script automates building `.deb` packages and associated metadata in **./build/debs**
+
+#### Steps:
+
+- Execute:
+
+- ```
+/bin/sh ./build\_debs.sh
 ```
 
-Expected output:
-```
-gpg: Signature made Mon May 25 17:46:56 2026 CEST
-gpg:                using ECDSA key 0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
-gpg: Good signature from "Uwe Niethammer <...>" [uncertain]
-```
+The Debian packages will be saved in the directory: `/path/to/onboard\_sources/build/debs`
 
-> **Note:** `[uncertain]` and the Web of Trust warning are normal for self-created keys without external certification. The signature is technically valid.
 
----
+### Install the Debian Packages
 
-## 6. Backup and Recovery
+The `apt\_install\_debs.sh` script simplifies installing the generated `.deb` packages using a local repository.
 
-### 6.1 What needs to be backed up
+#### Steps:
 
-The private key **never leaves the Trezor** — it cannot be exported. What you need to back up:
+- If the target system is the build system:
 
-| What | Where | How to back up |
-|---|---|---|
-| **Trezor seed (24 words)** | On the Trezor | Paper, metal plate |
-| **Public key** (`~/.gnupg-trezor`) | Local | Copy to another machine |
-| **Key fingerprint** | Noted | Password manager |
-| **Creation timestamp** | Printed during `init` | Noted (for exact reproduction) |
+  - Execute:
 
-### 6.2 Export and back up public key
-
-```bash
-GNUPGHOME=~/.gnupg-trezor gpg --export --armor \
-  0D51A98FB69A6887ED489FC1514E25BFCC1CCF35 > ~/trezor-gpg-public.asc
+- ```
+/bin/sh ./apt\_install\_debs.sh
 ```
 
-Store securely — e.g. in a password manager or encrypted USB drive.
+- If the target system is not the build system copy this files to a directory on the target:
 
-### 6.3 Restore key on a new machine
+  - All `build/debs/\*.deb` files.
 
-On the new machine:
+  - The `build/debs/Packages` file.
 
-```bash
-# 1. Install trezor-agent
-pip3 install trezor-agent --break-system-packages
-export PATH="$HOME/.local/bin:$PATH"
+  - The `apt\_install\_debs.sh` script.
 
-# 2. Connect and unlock Trezor
+  - Execute in the directory on the target system:
 
-# 3. Regenerate key — always use --time=0 for identical key
-trezor-gpg init --time=0 "First Last <email@example.com>"
-
-# 4. Alternative: import backed-up public key
-mkdir -p ~/.gnupg-trezor
-chmod 700 ~/.gnupg-trezor
-GNUPGHOME=~/.gnupg-trezor gpg --import ~/trezor-gpg-public.asc
-GNUPGHOME=~/.gnupg-trezor gpg --edit-key 0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
-# In the editor: trust → 5 (ultimate) → quit
-
-# 5. Set GNUPGHOME and PATH permanently
-echo 'export GNUPGHOME="$HOME/.gnupg-trezor"' >> ~/.bashrc
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-
-# 6. Configure Git (see Section 3)
+- ```
+/bin/sh ./apt\_install\_debs.sh
 ```
 
----
+### Uninstall the Debian Packages
 
-## 7. Multiple Machines
+- Execute:
 
-On each machine:
-
-1. Install `trezor-agent` (Section 1)
-2. Set up `~/.gnupg-trezor` — either via `trezor-gpg init` with the same timestamp or by importing the backed-up public key (Section 6.3)
-3. Configure Git (Section 3)
-4. Connect Trezor whenever signing commits
-
-The **private key always stays on the Trezor** — no copying between machines needed.
-
----
-
-## 8. Troubleshooting
-
-### `gpg: WARNING: nothing exported`
-`GNUPGHOME` points to the wrong directory:
-```bash
-export GNUPGHOME=~/.gnupg-trezor
-gpg --list-keys
+- ```
+/bin/sh ./apt\_install\_debs.sh "remove"
 ```
 
-### `commit.gpgsign` has no effect
-Check if the setting is actually set:
-```bash
-git config --global --list | grep gpgsign
-# If empty:
-git config --global commit.gpgsign true
+## Manuals
+
+```
+    \# Terminal  
+    man onboard  
+    onboard -h  
+      
+    \# Interactive  
+    yelp "help:onboard"  
+    xdg-open "help:onboard"  
+  
+    \# Onboard  
+    \# Right click on icon in systray -\> Help   
+  
+    \# Change keyboard language layout  
+    \# setxkbmap -layout de  
+    \# or \[us|in|ru|...\]  
+    \#   
+    \# ISO (pc105) / ANSI (pc104) examples:  
+    \# setxkbmap -model pc105 -layout de  
+    \# setxkbmap -model pc104 -layout us
 ```
 
-### `GPG home directory exists, remove it manually`
-The directory must be completely removed before `trezor-gpg init`:
-```bash
-rm -rf ~/.gnupg-trezor
-trezor-gpg init "Name <email>"
-```
+## D-Bus interface
 
-### Trezor not recognized
-```bash
-# Check udev rules
-ls /etc/udev/rules.d/ | grep trezor
-# If missing:
-sudo curl -L https://data.trezor.io/udev/51-trezor.rules \
-  -o /etc/udev/rules.d/51-trezor.rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-```
+The Onboard D-Bus interface allows communication between Onboard and other processes running concurrently on the Linux desktop.
 
-### Commit fails when Trezor is not connected
-With `commit.gpgsign=true` the Trezor must be plugged in and unlocked for every commit. To sign without Trezor temporarily:
-```bash
-git commit --no-gpg-sign -m "message"
-```
+Here the Interface description: [DBUS.md](https://github.com/onboard-osk/onboard/blob/main/DBUS.md)
 
----
+## Mousetweaks
 
-## 9. Important Notes
+This optional package provides mouse accessibility enhancements for the GNOME desktop. It offers a way to perform clicks without using any physical mouse buttons (Hover Click). The package is also available in various package managers. However, it is often not working anymore with onboard. In this case a manual installation from [https://github.com/onboard-osk/mousetweaks](https://github.com/onboard-osk/mousetweaks) should help.
 
-- The **Trezor seed** is the only true backup — whoever has the seed can restore the key on any device
-- `nistp256` (ECDSA) is the algorithm used — secure for current use cases, not post-quantum
-- trezor-gpg is still **experimental** — the API may change
-- With `commit.gpgsign=true`, the Trezor must be connected and unlocked for every commit, otherwise the commit will fail
+## Homepage
+
+[https://github.com/onboard-osk/onboard](https://github.com/onboard-osk/onboard)
+
+## Reporting Bugs
+
+[https://github.com/onboard-osk/onboard/issues](https://github.com/onboard-osk/onboard/issues)
+
+## License
+
+This program is released under the terms of the GNU General Public License. Please see the file COPYING for details.
+
+
+> **Note (2026-05-23):** The commit history of this repository has been temporarely rewritten using `git-filter-repo.` If you have problems, please re-clone: `git clone https://github.com/onboard-osk/onboard.git`
+
