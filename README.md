@@ -1,12 +1,12 @@
 # Trezor GPG Key Setup for Git Commit Signing
 
-Complete setup, usage, and recovery of a GPG key based on the **Trezor Model T** for signing Git commits.
+Complete setup, usage, and recovery of a GPG key based on **Trezor** for signing Git commits.
 
 ---
 
 ## Prerequisites
 
-- Trezor Model T
+- Trezor hardware wallet
 - Ubuntu / Debian Linux
 - Python 3.10+
 - Git 2.x
@@ -51,11 +51,12 @@ sudo udevadm trigger
 
 ### 2.1 Connect and unlock Trezor
 
-Plug in the Trezor Model T and enter your PIN.
+Plug in the Trezor and enter your PIN.
 
 ### 2.2 Generate key
 
 ```bash
+TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11 \
 trezor-gpg init --time=0 "First Last <email@example.com>"
 ```
 
@@ -179,11 +180,13 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 # 4. Regenerate identical key (--time=0 always gives the same key)
 rm -rf ~/.gnupg-trezor
+TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11 \
 trezor-gpg init --time=0 "First Last <email@example.com>"
 
 # 5. Set environment permanently
 echo 'export GNUPGHOME="$HOME/.gnupg-trezor"' >> ~/.bashrc
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+echo 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11' >> ~/.bashrc
 source ~/.bashrc
 
 # 6. Configure Git (see Section 3)
@@ -224,6 +227,7 @@ git config --global commit.gpgsign true
 ### `GPG home directory exists, remove it manually`
 ```bash
 rm -rf ~/.gnupg-trezor
+TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11 \
 trezor-gpg init --time=0 "Name <email>"
 ```
 
