@@ -1,3 +1,212 @@
+# Trezor GPG Key Setup for Git Commit Signing
+
+Complete setup, usage, and recovery of a GPG key based on **Trezor** for signing Git commits.
+
+---
+
+## Prerequisites
+
+- Trezor hardware wallet
+- Ubuntu / Debian Linux
+- Python 3.10+
+- Git 2.x
+- `pip3` available
+
+---
+
+## 1. Installation
+
+### 1.1 Install trezor-agent
+
+```bash
+pip3 install trezor-agent --break-system-packages
+```
+
+### 1.2 Set PATH permanently
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 1.3 Verify installation
+
+```bash
+trezor-gpg --version
+trezorctl version
+```
+
+### 1.4 Install udev rules (required for Trezor USB access)
+
+```bash
+sudo curl -L https://data.trezor.io/udev/51-trezor.rules \
+  -o /etc/udev/rules.d/51-trezor.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+---
+
+## 2. Generate GPG Key
+
+### 2.1 Connect and unlock Trezor
+
+Plug in the Trezor via USB and unlock it (enter PIN).
+
+### 2.2 Generate key
+
+```bash
+TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11 \
+trezor-gpg init --time=0 "First Last <email@example.com>"
+```
+
+> **Important:** Always use `--time=0`. This sets the key creation timestamp to Unix
+> Epoch (1970-01-01), which allows you to regenerate the **exact same key** on any
+> machine at any time — as long as you have the Trezor seed.
+>
+> To verify your timestamp:
+> ```bash
+> GNUPGHOME=~/.gnupg-trezor gpg --list-keys --with-colons | grep "^pub"
+> ```
+> A date of `1970-01-01` confirms `--time=0` was used.
+> If you did not use `--time=0` during the first `init`, note the exact timestamp
+> printed in the output.
+
+The key is stored in `~/.gnupg-trezor`. If the directory already exists, remove it first:
+
+```bash
+rm -rf ~/.gnupg-trezor
+TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11 \
+trezor-gpg init --time=0 "First Last <email@example.com>"
+```
+
+### 2.3 Set GNUPGHOME permanently
+
+```bash
+echo 'export GNUPGHOME="$HOME/.gnupg-trezor"' >> ~/.bashrc
+echo 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-x11' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 2.4 Get key fingerprint
+
+```bash
+gpg --list-keys
+```
+
+Example output:
+```
+sec   nistp256 1970-01-01 [SC]
+      0D51A98FB69A6887ED489FC1514E25BFCC1CCF35
+uid           [ultimate] First Last <email@example.com>
+ssb   nistp256 1970-01-01 [E]
+```
+
+Keep the fingerprint in a safe place.
+
+---
+
+## 3. Configure Git
+
+```bash
+# Set signing key
+git config --global user.signingkey YOUR_FINGERPRINT
+
+# Sign all commits automatically
+git config --global commit.gpgsign true
+
+# GPG wrapper so Git always uses the correct GNUPGHOME
+cat > ~/.local/bin/trezor-gpg-wrapper << 'WRAPPER'
+#!/bin/bash
+export GNUPGHOME="$HOME/.gnupg-trezor"
+exec gpg "$@"
+WRAPPER
+chmod +x ~/.local/bin/trezor-gpg-wrapper
+
+git config --global gpg.program trezor-gpg-wrapper
+```
+
+Verify:
+```bash
+git config --global --list | grep -E "gpg|sign"
+```
+
+Expected output:
+```
+gpg.program=trezor-gpg-wrapper
+user.signingkey=YOUR_FINGERPRINT
+commit.gpgsign=true
+```
+
+---
+
+## 4. Add Public Key to GitHub
+
+### 4.1 Export public key
+
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --export --armor YOUR_FINGERPRINT
+```
+
+### 4.2 Add to GitHub
+
+1. Open https://github.com/settings/keys
+2. Click **"New GPG key"**
+3. Paste the entire block from `-----BEGIN PGP PUBLIC KEY BLOCK-----`
+   to `-----END PGP PUBLIC KEY BLOCK-----`
+4. Click **"Add GPG key"**
+
+> **Important:** The commit author email must match the email on the GPG key
+> for GitHub to show **Verified**. Use the same address in both Git config and
+> the GPG key — e.g. the GitHub no-reply address:
+> `12345678+username@users.noreply.github.com`
+
+---
+
+## 5. Test Signing
+
+```bash
+# Connect and unlock Trezor
+git commit --allow-empty -m "test: GPG signing with Trezor"
+git log --show-signature -1
+```
+
+Expected output:
+```
+gpg: Signature made ...
+gpg:                using ECDSA key YOUR_FINGERPRINT
+gpg: Good signature from "First Last <email>" [uncertain]
+```
+
+> **Note:** `[uncertain]` and the Web of Trust warning are normal for self-created
+> keys without external certification. The signature is technically valid and GitHub
+> will show **Verified** as long as the email addresses match.
+
+---
+
+## 6. Backup and Recovery
+
+### 6.1 What to back up
+
+The private key **never leaves the Trezor** — it cannot be exported. What you need:
+
+| What | Where | How |
+|---|---|---|
+| **Trezor seed (24 words)** | On the Trezor | Paper or metal plate — keep offline |
+| **Public key** (`~/.gnupg-trezor`) | Local | Export to `.asc`, store in password manager |
+| **Key fingerprint** | Noted above | Password manager |
+| **`--time=0`** | This README | Ensures identical key reproduction |
+
+### 6.2 Export public key
+
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --export --armor \
+  YOUR_FINGERPRINT > ~/trezor-gpg-public.asc
+```
+
+### 6.3 Restore key on a new machine
+
+```bash
 # 1. Install trezor-agent
 pip3 install trezor-agent --break-system-packages
 export PATH="$HOME/.local/bin:$PATH"
