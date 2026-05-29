@@ -1,0 +1,11 @@
+#!/bin/bash
+# Note: Passphrase protection can be disabled on the Trezor device.
+# To disable it, run: trezorctl set passphrase off
+trezorctl get-address -n "m/44'/0'/0'/0/0" > /tmp/trezor_out
+result=$(cat /tmp/trezor_out)
+rm -f /tmp/trezor_out
+if [ -n "$result" ]; then
+    echo "Login successful, you can logout with 'trezorctl clear-session'"
+else
+    echo "Login failed"
+fi
