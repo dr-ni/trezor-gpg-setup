@@ -43,6 +43,9 @@ pip3 install trezor-agent --break-system-packages
 
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+```
+
+```bash
 source ~/.bashrc
 ```
 
@@ -50,6 +53,9 @@ source ~/.bashrc
 
 ```bash
 trezor-gpg --version
+```
+
+```bash
 trezorctl version
 ```
 
@@ -58,7 +64,13 @@ trezorctl version
 ```bash
 sudo curl -L https://data.trezor.io/udev/51-trezor.rules \
   -o /etc/udev/rules.d/51-trezor.rules
+```
+
+```bash
 sudo udevadm control --reload-rules
+```
+
+```bash
 sudo udevadm trigger
 ```
 
@@ -69,19 +81,28 @@ sudo udevadm trigger
 Set these permanently in `~/.bashrc`:
 
 ```bash
-# GPG keyring for Trezor keys
 echo 'export GNUPGHOME="$HOME/.gnupg-trezor"' >> ~/.bashrc
+```
 
-# pinentry program — choose based on your environment:
-# TTY / SSH session:
+TTY / SSH session:
+```bash
 echo 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-tty' >> ~/.bashrc
-# Desktop / X11:
-# echo 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-gtk-2' >> ~/.bashrc
+```
 
-# Passphrase mode — see note below
+Desktop / X11:
+```bash
+echo 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-gtk-2' >> ~/.bashrc
+```
+
+```bash
 echo 'export TREZOR_PASSPHRASE=""' >> ~/.bashrc
-echo 'export TREZOR_PASSPHRASE_ON_DEVICE=0' >> ~/.bashrc
+```
 
+```bash
+echo 'export TREZOR_PASSPHRASE_ON_DEVICE=0' >> ~/.bashrc
+```
+
+```bash
 source ~/.bashrc
 ```
 
@@ -130,6 +151,9 @@ If the directory already exists, remove it first:
 
 ```bash
 rm -rf ~/.gnupg-trezor
+```
+
+```bash
 trezor-gpg init --time=0 "First Last <email@example.com>"
 ```
 
@@ -153,21 +177,30 @@ Keep the fingerprint in a safe place.
 
 ## 4. Configure Git
 
+Set signing key:
 ```bash
-# Set signing key
 git config --global user.signingkey YOUR_FINGERPRINT
+```
 
-# Sign all commits automatically
+Sign all commits automatically:
+```bash
 git config --global commit.gpgsign true
+```
 
-# GPG wrapper so Git always uses the correct GNUPGHOME
+Create GPG wrapper so Git always uses the correct GNUPGHOME:
+```bash
 cat > ~/.local/bin/trezor-gpg-wrapper << 'WRAPPER'
 #!/bin/bash
 export GNUPGHOME="$HOME/.gnupg-trezor"
 exec gpg "$@"
 WRAPPER
-chmod +x ~/.local/bin/trezor-gpg-wrapper
+```
 
+```bash
+chmod +x ~/.local/bin/trezor-gpg-wrapper
+```
+
+```bash
 git config --global gpg.program trezor-gpg-wrapper
 ```
 
@@ -213,6 +246,9 @@ GNUPGHOME=~/.gnupg-trezor gpg --export --armor YOUR_FINGERPRINT
 
 ```bash
 git commit --allow-empty -m "test: GPG signing with Trezor"
+```
+
+```bash
 git log --show-signature -1
 ```
 
@@ -253,32 +289,54 @@ GNUPGHOME=~/.gnupg-trezor gpg --export --armor \
 
 ### 7.3 Restore key on a new machine
 
+**1. Install trezor-agent:**
 ```bash
-# 1. Install trezor-agent
 pip3 install trezor-agent --break-system-packages
-export PATH="$HOME/.local/bin:$PATH"
+```
 
-# 2. Install udev rules
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+**2. Install udev rules:**
+```bash
 sudo curl -L https://data.trezor.io/udev/51-trezor.rules \
   -o /etc/udev/rules.d/51-trezor.rules
-sudo udevadm control --reload-rules && sudo udevadm trigger
-
-# 3. Connect and unlock Trezor
-
-# 4a. Regenerate key — requires same seed, passphrase, identity string, timestamp
-rm -rf ~/.gnupg-trezor
-trezor-gpg init --time=0 "First Last <email@example.com>"
-
-# 4b. Alternative: import backed-up public key
-mkdir -p ~/.gnupg-trezor && chmod 700 ~/.gnupg-trezor
-GNUPGHOME=~/.gnupg-trezor gpg --import ~/trezor-gpg-public.asc
-GNUPGHOME=~/.gnupg-trezor gpg --edit-key YOUR_FINGERPRINT
-# In the editor: trust → 5 (ultimate) → quit
-
-# 5. Set environment permanently (see Section 2)
-
-# 6. Configure Git (see Section 4)
 ```
+
+```bash
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+**3. Connect and unlock Trezor.**
+
+**4a. Regenerate key** — requires same seed, passphrase, identity string, timestamp:
+```bash
+rm -rf ~/.gnupg-trezor
+```
+
+```bash
+trezor-gpg init --time=0 "First Last <email@example.com>"
+```
+
+**4b. Alternative: import backed-up public key:**
+```bash
+mkdir -p ~/.gnupg-trezor && chmod 700 ~/.gnupg-trezor
+```
+
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --import ~/trezor-gpg-public.asc
+```
+
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --edit-key YOUR_FINGERPRINT
+```
+
+In the GPG editor: `trust` → `5` (ultimate) → `quit`
+
+**5.** Set environment permanently (see Section 2).
+
+**6.** Configure Git (see Section 4).
 
 ---
 
@@ -304,27 +362,45 @@ same key fingerprint on every machine.
 ### `gpg: WARNING: nothing exported`
 ```bash
 export GNUPGHOME=~/.gnupg-trezor
+```
+
+```bash
 gpg --list-keys
 ```
 
 ### `commit.gpgsign` has no effect
 ```bash
 git config --global --list | grep gpgsign
+```
+
+```bash
 git config --global commit.gpgsign true
 ```
 
 ### `GPG home directory exists, remove it manually`
 ```bash
 rm -rf ~/.gnupg-trezor
+```
+
+```bash
 trezor-gpg init --time=0 "Name <email>"
 ```
 
 ### Trezor not recognized
 ```bash
 ls /etc/udev/rules.d/ | grep trezor
+```
+
+```bash
 sudo curl -L https://data.trezor.io/udev/51-trezor.rules \
   -o /etc/udev/rules.d/51-trezor.rules
+```
+
+```bash
 sudo udevadm control --reload-rules
+```
+
+```bash
 sudo udevadm trigger
 ```
 
@@ -348,24 +424,34 @@ digit appears, not the digit shown on the keypad.
 ### `pinentry` / passphrase errors with trezor-agent
 ```bash
 export TREZOR_PASSPHRASE=""
+```
+
+```bash
 export TREZOR_PASSPHRASE_ON_DEVICE=0
 ```
+
 Note: this activates empty passphrase mode and disables Hidden Wallet.
 
 ### `gpg: signing failed: End of file`
 Stale trezor-gpg-agent processes are blocking USB access:
 ```bash
 pkill -f trezor-gpg-agent
+```
+
+```bash
 git commit
 ```
 
 ### Shell quoting errors with BIP32 paths
 Always quote derivation paths to prevent shell interpretation of `'`:
-```bash
-# Correct:
-trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
 
-# Wrong — shell will interpret unquoted apostrophes:
+Correct:
+```bash
+trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
+```
+
+Wrong — shell will interpret unquoted apostrophes:
+```bash
 trezorctl ethereum get-address -n m/44'/60'/0'/0/0
 ```
 
@@ -441,21 +527,27 @@ Or start a persistent agent socket:
 
 ```bash
 trezor-agent identity://ssh/user@remotehost &
+```
+
+```bash
 export SSH_AUTH_SOCK=$(trezor-agent --sock-path)
+```
+
+```bash
 ssh user@remotehost
 ```
 
 ### 12.3 Use with Git over SSH (GitHub)
 
+Export public key for GitHub identity:
 ```bash
-# 1. Export public key for GitHub identity
 trezor-agent identity://ssh/git@github.com
+```
 
-# 2. Add to GitHub:
-#    Settings → SSH and GPG keys → New SSH key
-#    Paste the ecdsa-sha2-nistp256 line
+Add to GitHub: **Settings → SSH and GPG keys → New SSH key** — paste the `ecdsa-sha2-nistp256` line.
 
-# 3. Connect
+Connect:
+```bash
 trezor-agent identity://ssh/git@github.com -- ssh -T git@github.com
 ```
 
@@ -463,7 +555,13 @@ trezor-agent identity://ssh/git@github.com -- ssh -T git@github.com
 
 ```bash
 eval $(trezor-agent identity://ssh/user@remotehost --ssh-agent)
+```
+
+```bash
 ssh user@remotehost
+```
+
+```bash
 git push
 ```
 
@@ -502,29 +600,43 @@ git push
 
 > Always quote BIP32 derivation paths to prevent shell issues with `'`.
 
+Ethereum:
 ```bash
-# Ethereum
 trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
+```
 
-# Bitcoin — Legacy (P2PKH)
+Bitcoin — Legacy (P2PKH):
+```bash
 trezorctl btc get-address -n "m/44'/0'/0'/0/0" -t p2pkh
+```
 
-# Bitcoin — SegWit bech32 (P2WPKH) — recommended
+Bitcoin — SegWit bech32 (P2WPKH) — recommended:
+```bash
 trezorctl btc get-address -n "m/84'/0'/0'/0/0" -t p2wpkh
+```
 
-# Bitcoin — P2SH-SegWit
+Bitcoin — P2SH-SegWit:
+```bash
 trezorctl btc get-address -n "m/49'/0'/0'/0/0" -t p2sh
+```
 
-# Litecoin
+Litecoin:
+```bash
 trezorctl ltc get-address -n "m/44'/2'/0'/0/0" -t p2pkh
+```
 
-# Dogecoin
+Dogecoin:
+```bash
 trezorctl doge get-address -n "m/44'/3'/0'/0/0" -t p2pkh
+```
 
-# Stellar (XLM)
+Stellar (XLM):
+```bash
 trezorctl stellar get-address -n "m/44'/148'/0'"
+```
 
-# Ripple (XRP)
+Ripple (XRP):
+```bash
 trezorctl xrp get-address -n "m/44'/144'/0'/0/0"
 ```
 
@@ -534,18 +646,14 @@ If passphrase is active, you will be prompted after PIN entry.
 
 ## 15. Session Management
 
+Clear session and lock the device (PIN required on next access):
 ```bash
-# Clear session cache on host (device stays unlocked)
 trezorctl clear-session
-
-# Lock the device (PIN required on next access)
-trezorctl lock-device
 ```
 
 | Command | Effect |
 |---|---|
-| `clear-session` | Removes host-side session cache — device stays unlocked |
-| `lock-device` | Locks device firmware — PIN required on next access |
+| `clear-session` | Clears host-side session cache and locks the device — PIN required on next access |
 
 ---
 
@@ -572,6 +680,9 @@ Save as `trezor-login.sh` and make executable:
 
 ```bash
 chmod +x trezor-login.sh
+```
+
+```bash
 ./trezor-login.sh
 ```
 
@@ -591,7 +702,6 @@ chmod +x trezor-login.sh
 pip install trezor
 ```
 
-Verify:
 ```powershell
 trezorctl version
 ```
@@ -614,7 +724,7 @@ Set in PowerShell (current session):
 $env:GNUPGHOME = "$env:USERPROFILE\.gnupg-trezor"
 ```
 
-Set permanently via System Properties → Environment Variables, or:
+Set permanently:
 ```powershell
 [System.Environment]::SetEnvironmentVariable("GNUPGHOME", "$env:USERPROFILE\.gnupg-trezor", "User")
 ```
@@ -623,32 +733,36 @@ Set permanently via System Properties → Environment Variables, or:
 
 trezor-agent does not run on Windows. The recommended approach is WSL2:
 
-1. Install WSL2 with Ubuntu:
-   ```powershell
-   wsl --install
-   ```
+**1. Install WSL2 with Ubuntu:**
+```powershell
+wsl --install
+```
 
-2. Inside WSL2, follow the Linux setup (Sections 1–6) as normal.
+**2.** Inside WSL2, follow the Linux setup (Sections 1–6) as normal.
 
-3. Configure Git inside WSL2 — commits signed there will show as **Verified**
-   on GitHub.
+**3.** Configure Git inside WSL2 — commits signed there will show as **Verified** on GitHub.
 
-4. The Trezor USB device must be forwarded to WSL2 using **usbipd**:
-   ```powershell
-   # Install usbipd-win (once)
-   winget install usbipd
+**4. Forward Trezor USB to WSL2 using usbipd:**
 
-   # List USB devices
-   usbipd list
+Install usbipd-win (once):
+```powershell
+winget install usbipd
+```
 
-   # Attach Trezor to WSL2 (replace X-Y with your bus ID)
-   usbipd attach --wsl --busid X-Y
-   ```
+List USB devices:
+```powershell
+usbipd list
+```
 
-   Inside WSL2, verify:
-   ```bash
-   lsusb | grep -i trezor
-   ```
+Attach Trezor to WSL2 (replace X-Y with your bus ID):
+```powershell
+usbipd attach --wsl --busid X-Y
+```
+
+Verify inside WSL2:
+```bash
+lsusb | grep -i trezor
+```
 
 ### 17.5 Login script on Windows (PowerShell)
 
@@ -672,11 +786,7 @@ Run:
 ### 17.6 Session management on Windows
 
 ```powershell
-# Clear session cache
 trezorctl clear-session
-
-# Lock device
-trezorctl lock-device
 ```
 
 ---
