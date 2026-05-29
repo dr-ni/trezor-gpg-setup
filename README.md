@@ -352,6 +352,13 @@ export TREZOR_PASSPHRASE_ON_DEVICE=0
 ```
 Note: this activates empty passphrase mode and disables Hidden Wallet.
 
+### `gpg: signing failed: End of file`
+Stale trezor-gpg-agent processes are blocking USB access:
+```bash
+pkill -f trezor-gpg-agent
+git commit
+```
+
 ### Shell quoting errors with BIP32 paths
 Always quote derivation paths to prevent shell interpretation of `'`:
 ```bash
@@ -542,7 +549,35 @@ trezorctl lock-device
 
 ---
 
-## 16. Runtime Flow
+## 16. Login Script
+
+A minimal script to unlock the Trezor and confirm authentication without
+exposing the derived address.
+
+```bash
+#!/bin/bash
+# Note: Passphrase protection can be disabled on the Trezor device.
+# To disable it, run: trezorctl set passphrase off
+trezorctl get-address -n "m/44'/0'/0'/0/0" > /tmp/trezor_out
+result=$(cat /tmp/trezor_out)
+rm -f /tmp/trezor_out
+if [ -n "$result" ]; then
+    echo "Login successful, you can logout with 'trezorctl clear-session'"
+else
+    echo "Login failed"
+fi
+```
+
+Save as `trezor-login.sh` and make executable:
+
+```bash
+chmod +x trezor-login.sh
+./trezor-login.sh
+```
+
+---
+
+## 17. Runtime Flow
 
 ```
 Connect Trezor
