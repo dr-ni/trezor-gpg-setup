@@ -217,6 +217,11 @@ user.signingkey=YOUR_FINGERPRINT
 commit.gpgsign=true
 ```
 
+If `user.signingkey` is missing, add it:
+```bash
+git config --global user.signingkey YOUR_FINGERPRINT
+```
+
 ---
 
 ## 5. Add Public Key to GitHub
