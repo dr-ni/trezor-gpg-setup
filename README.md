@@ -505,25 +505,32 @@ git push
 ```bash
 # Ethereum
 trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
-
+```
+```bash
 # Bitcoin — Legacy (P2PKH)
 trezorctl btc get-address -n "m/44'/0'/0'/0/0" -t p2pkh
-
+```
+```bash
 # Bitcoin — SegWit bech32 (P2WPKH) — recommended
 trezorctl btc get-address -n "m/84'/0'/0'/0/0" -t p2wpkh
-
+```
+```bash
 # Bitcoin — P2SH-SegWit
 trezorctl btc get-address -n "m/49'/0'/0'/0/0" -t p2sh
-
+```
+```bash
 # Litecoin
 trezorctl ltc get-address -n "m/44'/2'/0'/0/0" -t p2pkh
-
+```
+```bash
 # Dogecoin
 trezorctl doge get-address -n "m/44'/3'/0'/0/0" -t p2pkh
-
+```
+```bash
 # Stellar (XLM)
 trezorctl stellar get-address -n "m/44'/148'/0'"
-
+```
+```bash
 # Ripple (XRP)
 trezorctl xrp get-address -n "m/44'/144'/0'/0/0"
 ```
@@ -537,9 +544,6 @@ If passphrase is active, you will be prompted after PIN entry.
 ```bash
 # Clear session cache on host (device stays unlocked)
 trezorctl clear-session
-
-# Lock the device (PIN required on next access)
-trezorctl lock-device
 ```
 
 | Command | Effect |
