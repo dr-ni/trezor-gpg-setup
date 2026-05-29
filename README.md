@@ -505,32 +505,25 @@ git push
 ```bash
 # Ethereum
 trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
-```
-```bash
+
 # Bitcoin — Legacy (P2PKH)
 trezorctl btc get-address -n "m/44'/0'/0'/0/0" -t p2pkh
-```
-```bash
+
 # Bitcoin — SegWit bech32 (P2WPKH) — recommended
 trezorctl btc get-address -n "m/84'/0'/0'/0/0" -t p2wpkh
-```
-```bash
+
 # Bitcoin — P2SH-SegWit
 trezorctl btc get-address -n "m/49'/0'/0'/0/0" -t p2sh
-```
-```bash
+
 # Litecoin
 trezorctl ltc get-address -n "m/44'/2'/0'/0/0" -t p2pkh
-```
-```bash
+
 # Dogecoin
 trezorctl doge get-address -n "m/44'/3'/0'/0/0" -t p2pkh
-```
-```bash
+
 # Stellar (XLM)
 trezorctl stellar get-address -n "m/44'/148'/0'"
-```
-```bash
+
 # Ripple (XRP)
 trezorctl xrp get-address -n "m/44'/144'/0'/0/0"
 ```
@@ -544,11 +537,15 @@ If passphrase is active, you will be prompted after PIN entry.
 ```bash
 # Clear session cache on host (device stays unlocked)
 trezorctl clear-session
+
+# Lock the device (PIN required on next access)
+trezorctl lock-device
 ```
 
 | Command | Effect |
 |---|---|
-| `clear-session` | Removes host-side session cache — device locked |
+| `clear-session` | Removes host-side session cache — device stays unlocked |
+| `lock-device` | Locks device firmware — PIN required on next access |
 
 ---
 
@@ -580,7 +577,111 @@ chmod +x trezor-login.sh
 
 ---
 
-## 17. Runtime Flow
+## 17. Windows Setup
+
+> **Note:** trezor-agent (GPG/SSH bridge) is **not supported on Windows**.
+> Only `trezorctl` (device communication, wallet addresses, session management)
+> works natively. For GPG commit signing on Windows, use WSL2 (see below).
+
+### 17.1 Install trezorctl on Windows
+
+**Requirements:** Python 3.10+, pip
+
+```powershell
+pip install trezor
+```
+
+Verify:
+```powershell
+trezorctl version
+```
+
+### 17.2 Trezor USB access on Windows
+
+No udev rules needed — Windows uses WinUSB/libusb via Zadig if the device
+is not recognized automatically.
+
+If `trezorctl list` returns nothing:
+
+1. Download Zadig from https://zadig.akeo.ie
+2. Plug in Trezor
+3. In Zadig: **Options → List All Devices** → select **Trezor** → install **WinUSB**
+
+### 17.3 Environment variables on Windows
+
+Set in PowerShell (current session):
+```powershell
+$env:GNUPGHOME = "$env:USERPROFILE\.gnupg-trezor"
+```
+
+Set permanently via System Properties → Environment Variables, or:
+```powershell
+[System.Environment]::SetEnvironmentVariable("GNUPGHOME", "$env:USERPROFILE\.gnupg-trezor", "User")
+```
+
+### 17.4 GPG commit signing on Windows (via WSL2)
+
+trezor-agent does not run on Windows. The recommended approach is WSL2:
+
+1. Install WSL2 with Ubuntu:
+   ```powershell
+   wsl --install
+   ```
+
+2. Inside WSL2, follow the Linux setup (Sections 1–6) as normal.
+
+3. Configure Git inside WSL2 — commits signed there will show as **Verified**
+   on GitHub.
+
+4. The Trezor USB device must be forwarded to WSL2 using **usbipd**:
+   ```powershell
+   # Install usbipd-win (once)
+   winget install usbipd
+
+   # List USB devices
+   usbipd list
+
+   # Attach Trezor to WSL2 (replace X-Y with your bus ID)
+   usbipd attach --wsl --busid X-Y
+   ```
+
+   Inside WSL2, verify:
+   ```bash
+   lsusb | grep -i trezor
+   ```
+
+### 17.5 Login script on Windows (PowerShell)
+
+```powershell
+# trezor-login.ps1
+# Note: Passphrase protection can be disabled on the Trezor device.
+# To disable it, run: trezorctl set passphrase off
+$result = trezorctl get-address -n "m/44'/0'/0'/0/0" 2>$null
+if ($result) {
+    Write-Host "Login successful, you can logout with 'trezorctl clear-session'"
+} else {
+    Write-Host "Login failed"
+}
+```
+
+Run:
+```powershell
+.\trezor-login.ps1
+```
+
+### 17.6 Session management on Windows
+
+```powershell
+# Clear session cache
+trezorctl clear-session
+
+# Lock device
+trezorctl lock-device
+```
+
+---
+
+## 18. Runtime Flow
 
 ```
 Connect Trezor
