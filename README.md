@@ -143,7 +143,7 @@ trezor-gpg init --time=0 "First Last <email@example.com>"
 >
 > To verify:
 > ```bash
-> GNUPGHOME=~/.gnupg-trezor gpg --list-keys --with-colons | grep "^pub"
+> GNUPGHOME=~/.gnupg-trezor gpg --list-keys
 > ```
 > A date of `1970-01-01` confirms `--time=0` was used.
 
