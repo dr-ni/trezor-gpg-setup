@@ -289,6 +289,10 @@ from the seed and never stored on the host. What you need to back up:
 
 ```bash
 GNUPGHOME=~/.gnupg-trezor gpg --export --armor \
+  YOUR_FINGERPRINT
+```
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --export --armor \
   YOUR_FINGERPRINT > ~/trezor-gpg-public.asc
 ```
 
