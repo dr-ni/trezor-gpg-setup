@@ -548,8 +548,7 @@ trezorctl clear-session
 
 | Command | Effect |
 |---|---|
-| `clear-session` | Removes host-side session cache — device stays unlocked |
-| `lock-device` | Locks device firmware — PIN required on next access |
+| `clear-session` | Removes host-side session cache — device locked |
 
 ---
 
