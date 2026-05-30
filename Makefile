@@ -26,9 +26,7 @@ install: install-deps install-udev install-env install-scripts
 install-deps:
 	@echo "==> Installing trezor-agent..."
 	pip3 install trezor-agent --break-system-packages
-	@echo "==> Setting PATH..."
-	@grep -qxF 'export PATH="$$HOME/.local/bin:$$PATH"' $(BASHRC) || \
-		echo 'export PATH="$$HOME/.local/bin:$$PATH"' >> $(BASHRC)
+	@echo "==> PATH is managed by ~/.profile — no changes needed."
 
 install-udev:
 	@echo "==> Installing udev rules..."
@@ -40,13 +38,13 @@ install-udev:
 
 install-env:
 	@echo "==> Adding environment variables to $(BASHRC)..."
-	@grep -qxF 'export GNUPGHOME="$$HOME/.gnupg-trezor"' $(BASHRC) || \
+	@grep -qF 'GNUPGHOME' $(BASHRC) || \
 		echo 'export GNUPGHOME="$$HOME/.gnupg-trezor"' >> $(BASHRC)
-	@grep -qxF 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-tty' $(BASHRC) || \
+	@grep -qF 'TREZOR_PIN_ENTRY_BINARY' $(BASHRC) || \
 		echo 'export TREZOR_PIN_ENTRY_BINARY=/usr/bin/pinentry-tty' >> $(BASHRC)
-	@grep -qxF 'export TREZOR_PASSPHRASE=""' $(BASHRC) || \
+	@grep -qF 'TREZOR_PASSPHRASE=' $(BASHRC) || \
 		echo 'export TREZOR_PASSPHRASE=""' >> $(BASHRC)
-	@grep -qxF 'export TREZOR_PASSPHRASE_ON_DEVICE=0' $(BASHRC) || \
+	@grep -qF 'TREZOR_PASSPHRASE_ON_DEVICE' $(BASHRC) || \
 		echo 'export TREZOR_PASSPHRASE_ON_DEVICE=0' >> $(BASHRC)
 	@echo "==> Environment variables added."
 
