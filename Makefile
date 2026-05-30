@@ -8,7 +8,7 @@ BASHRC      := $(HOME)/.bashrc
 all: help
 
 help:
-	@echo "Trezor GPG Setup — available targets:"
+	@echo "Trezor GPG Setup - available targets:"
 	@echo ""
 	@echo "  make install        Full install (all steps below)"
 	@echo "  make install-deps   Install trezor-agent via pip"
@@ -26,7 +26,7 @@ install: install-deps install-udev install-env install-scripts install-git
 install-deps:
 	@echo "==> Installing trezor-agent..."
 	pip3 install trezor-agent --break-system-packages
-	@echo "==> PATH is managed by ~/.profile — no changes needed."
+	@echo "==> PATH is managed by ~/.profile - no changes needed."
 
 install-udev:
 	@echo "==> Installing udev rules..."

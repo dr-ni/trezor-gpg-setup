@@ -5,7 +5,7 @@ trezorctl get-address -n "m/44'/0'/0'/0/0" > /tmp/trezor_out
 result=$(cat /tmp/trezor_out)
 rm -f /tmp/trezor_out
 if [ -n "$result" ]; then
-    echo "Login successful"
+    echo "Login successful, you can logout with 'trezor-logout'"
 else
     echo "Login failed"
 fi

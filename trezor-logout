@@ -3,7 +3,7 @@
 trezorctl clear-session
 result=$?
 
-if [ -n "$result" ]; then
+if [ "$result" -eq 0 ]; then
     echo "Logout successful"
 else
     echo "Logout failed"

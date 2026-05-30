@@ -708,20 +708,20 @@ trezorctl get-address -n "m/44'/0'/0'/0/0" > /tmp/trezor_out
 result=$(cat /tmp/trezor_out)
 rm -f /tmp/trezor_out
 if [ -n "$result" ]; then
-    echo "Login successful, you can logout with 'trezorctl clear-session'"
+    echo "Login successful, you can logout with 'trezor-logout'"
 else
     echo "Login failed"
 fi
 ```
 
-Save as `trezor-login.sh` and make executable:
+Save as `trezor-login` and make executable:
 
 ```bash
-chmod +x trezor-login.sh
+chmod +x trezor-login
 ```
 
 ```bash
-./trezor-login.sh
+./trezor-login
 ```
 
 ---
