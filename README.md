@@ -18,6 +18,12 @@ and 2FA using a **Trezor** hardware wallet.
 > - **PIN** — entered via device matrix, handled entirely by Trezor firmware
 > - **Passphrase** — optional, entered on host via pinentry or set via env variable
 > - **pinentry** — affects passphrase and trezor-agent flows only, not PIN
+>
+> **Device recommendation for terminal/headless use:**
+> **Trezor One** is the best choice for terminal and script-based workflows.
+> It is the only Trezor model that allows PIN entry from the terminal via the
+> numeric keypad matrix. All other models (Safe 3, Model T) require PIN entry
+> on the device touchscreen and cannot be used headlessly.
 
 ---
 
@@ -421,14 +427,37 @@ git commit --no-gpg-sign -m "message"
 ### `PIN invalid` error
 Trezor One uses position-based PIN entry. The display shows numbers in random
 order — enter the **position** of each digit on the matrix, not the digit itself:
+
 ```
-Display shows random layout.    Fixed keypad positions:
-  e.g.  3  7  5                   7  8  9
-        8  2  9                   4  5  6
-        1  4  6                   1  2  3
+Fixed keypad positions (what you type):
+  7  8  9
+  4  5  6
+  1  2  3
 ```
-Look at the Trezor display while typing. PIN enters the position where your
-digit appears, not the digit shown on the keypad.
+
+The Trezor display shows a scrambled layout each time, for example:
+```
+  3  7  5
+  8  2  9
+  1  4  6
+```
+
+To enter a 6-digit PIN, e.g. **2-7-4-9-1-5**, look at the Trezor display
+and find where each digit appears, then type its **position**:
+
+| PIN digit | Appears at position | Type |
+|---|---|---|
+| 2 | bottom-center | `2` |
+| 7 | top-left | `7` |
+| 4 | middle-left | `4` |
+| 9 | middle-right | `6` |
+| 1 | bottom-left | `1` |
+| 5 | middle-center | `5` |
+
+So you type: `7` `2` `4` `6` `1` `5` — not the digits themselves.
+
+The layout changes every time you enter your PIN. Always look at the
+Trezor display, not the keyboard.
 
 ### `pinentry` / passphrase errors with trezor-agent
 ```bash
