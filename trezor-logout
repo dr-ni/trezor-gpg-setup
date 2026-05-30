@@ -1,0 +1,10 @@
+#!/bin/bash
+
+trezorctl clear-session
+result=$?
+
+if [ -n "$result" ]; then
+    echo "Logout successful"
+else
+    echo "Logout failed"
+fi
