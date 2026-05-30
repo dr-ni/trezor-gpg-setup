@@ -18,7 +18,7 @@ help:
 	@echo "  make install-scripts Install trezor-login and trezor-logout scripts"
 	@echo "  make uninstall      Remove installed scripts and udev rules"
 
-install: install-deps install-udev install-env install-scripts
+install: install-deps install-udev install-env install-scripts install-git
 	@echo ""
 	@echo "Done. Run 'source ~/.bashrc' to apply environment variables."
 	@echo "Then follow README.md Section 3 to generate your GPG key."
