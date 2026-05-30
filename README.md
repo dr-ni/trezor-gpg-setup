@@ -1,4 +1,4 @@
-# Trezor — GPG · SSH · 2FA Setup
+# Trezor - GPG · SSH · 2FA Setup
 
 Complete setup, usage, and recovery for GPG signing, SSH authentication,
 and 2FA using a **Trezor** hardware wallet.
@@ -15,9 +15,9 @@ and 2FA using a **Trezor** hardware wallet.
 | Host UI | pinentry | Passphrase prompts on host |
 
 > **Key distinction:**
-> - **PIN** — entered via device matrix, handled entirely by Trezor firmware
-> - **Passphrase** — optional, entered on host via pinentry or set via env variable
-> - **pinentry** — affects passphrase and trezor-agent flows only, not PIN
+> - **PIN** - entered via device matrix, handled entirely by Trezor firmware
+> - **Passphrase** - optional, entered on host via pinentry or set via env variable
+> - **pinentry** - affects passphrase and trezor-agent flows only, not PIN
 >
 > **Device recommendation for terminal/headless use:**
 > **Trezor One** is the best choice for terminal and script-based workflows.
@@ -114,7 +114,7 @@ source ~/.bashrc
 
 > **Note on pinentry:**
 > `TREZOR_PIN_ENTRY_BINARY` affects **passphrase** prompts and trezor-agent flows
-> only — **not** the Trezor PIN matrix. The PIN is always handled by device
+> only - **not** the Trezor PIN matrix. The PIN is always handled by device
 > firmware directly.
 >
 > | Environment | Recommended pinentry |
@@ -124,7 +124,7 @@ source ~/.bashrc
 > | KDE | `pinentry-qt` |
 
 > **Note on passphrase:**
-> `TREZOR_PASSPHRASE=""` activates **empty passphrase mode** — this disables
+> `TREZOR_PASSPHRASE=""` activates **empty passphrase mode** - this disables
 > Hidden Wallet functionality. If you use a passphrase for a Hidden Wallet,
 > do not set this variable and enter your passphrase when prompted.
 
@@ -142,7 +142,7 @@ Plug in the Trezor via USB and enter PIN when prompted.
 trezor-gpg init --time=0 "First Last <email@example.com>"
 ```
 
-> **Important — `--time=0`:**
+> **Important - `--time=0`:**
 > Sets the key creation timestamp to Unix Epoch (1970-01-01).
 > Using the same timestamp, identity string, seed, passphrase, and curve
 > will reproduce the same key fingerprint on any machine.
@@ -248,7 +248,7 @@ GNUPGHOME=~/.gnupg-trezor gpg --export --armor YOUR_FINGERPRINT
 
 > **Important:** The commit author email must match the email on the GPG key
 > for GitHub to show **Verified**. Use the same address in both Git config and
-> the GPG key — e.g. the GitHub no-reply address:
+> the GPG key - e.g. the GitHub no-reply address:
 > `12345678+username@users.noreply.github.com`
 
 ---
@@ -280,12 +280,12 @@ gpg: Good signature from "First Last <email>" [uncertain]
 
 ### 7.1 What to back up
 
-Private signing operations occur on-device — the key material is derived
+Private signing operations occur on-device - the key material is derived
 from the seed and never stored on the host. What you need to back up:
 
 | What | Where | How |
 |---|---|---|
-| **Trezor seed (24 words)** | On the Trezor | Paper or metal plate — keep offline |
+| **Trezor seed (24 words)** | On the Trezor | Paper or metal plate - keep offline |
 | **Public key** (`~/.gnupg-trezor`) | Local | Export to `.asc`, store in password manager |
 | **Key fingerprint** | Noted above | Password manager |
 | **Identity string** | This README | Exact string used in `trezor-gpg init` |
@@ -325,7 +325,7 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 **3. Connect and unlock Trezor.**
 
-**4a. Regenerate key** — requires same seed, passphrase, identity string, timestamp:
+**4a. Regenerate key** - requires same seed, passphrase, identity string, timestamp:
 ```bash
 rm -rf ~/.gnupg-trezor
 ```
@@ -366,7 +366,7 @@ On each machine:
 4. Configure Git (Section 4)
 5. Connect Trezor whenever signing commits
 
-The **private signing operations always occur on the Trezor** — no key material
+The **private signing operations always occur on the Trezor** - no key material
 is copied between machines. `--time=0` with identical parameters reproduces the
 same key fingerprint on every machine.
 
@@ -426,7 +426,7 @@ git commit --no-gpg-sign -m "message"
 
 ### `PIN invalid` error
 Trezor One uses position-based PIN entry. The display shows numbers in random
-order — enter the **position** of each digit on the matrix, not the digit itself:
+order - enter the **position** of each digit on the matrix, not the digit itself:
 
 ```
 Fixed keypad positions (what you type):
@@ -443,18 +443,18 @@ The Trezor display shows a scrambled layout each time, for example:
 ```
 
 To enter a 6-digit PIN, e.g. **2-7-4-9-1-5**, look at the Trezor display
-and find where each digit appears, then type its **position**:
+and find where each digit appears, then type the **fixed keypad position** of that cell:
 
-| PIN digit | Appears at position | Type |
+| PIN digit | Scrambled display cell | Fixed position to type |
 |---|---|---|
-| 2 | bottom-center | `2` |
-| 7 | top-left | `7` |
-| 4 | middle-left | `4` |
+| 2 | middle-center | `5` |
+| 7 | top-center | `8` |
+| 4 | bottom-center | `2` |
 | 9 | middle-right | `6` |
 | 1 | bottom-left | `1` |
-| 5 | middle-center | `5` |
+| 5 | top-left | `7` |
 
-So you type: `7` `2` `4` `6` `1` `5` — not the digits themselves.
+So you type: `5` `8` `2` `6` `1` `7` - not the digits themselves.
 
 The layout changes every time you enter your PIN. Always look at the
 Trezor display, not the keyboard.
@@ -488,7 +488,7 @@ Correct:
 trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
 ```
 
-Wrong — shell will interpret unquoted apostrophes:
+Wrong - shell will interpret unquoted apostrophes:
 ```bash
 trezorctl ethereum get-address -n m/44'/60'/0'/0/0
 ```
@@ -497,12 +497,12 @@ trezorctl ethereum get-address -n m/44'/60'/0'/0/0
 
 ## 10. Important Notes
 
-- **Private signing operations occur on-device** — key material is derived
+- **Private signing operations occur on-device** - key material is derived
   from the seed inside the Trezor and never stored on the host
 - Deterministic key reproduction requires identical: seed, passphrase, identity
   string, curve, and timestamp
-- `nistp256` (ECDSA) is used — secure for current use cases, not post-quantum
-- trezor-gpg is still **experimental** — the API may change
+- `nistp256` (ECDSA) is used - secure for current use cases, not post-quantum
+- trezor-gpg is still **experimental** - the API may change
 - With `commit.gpgsign=true`, the Trezor must be connected for every commit
 
 ---
@@ -521,12 +521,12 @@ trezorctl ethereum get-address -n m/44'/60'/0'/0/0
 | **Trezor One** | **✓** | **✗** |
 | **Trezor Model T / Safe 3/5** | **✓** | **✓** |
 
-**Trezor One supports FIDO U2F only** — not FIDO2/WebAuthn or Passkeys.
+**Trezor One supports FIDO U2F only** - not FIDO2/WebAuthn or Passkeys.
 
 ### Setup
 
 Register the Trezor directly in your browser or service's security key settings
-— no additional software required beyond the udev rule (Section 1.4).
+- no additional software required beyond the udev rule (Section 1.4).
 
 ### Works with
 
@@ -582,7 +582,7 @@ Export public key for GitHub identity:
 trezor-agent identity://ssh/git@github.com
 ```
 
-Add to GitHub: **Settings → SSH and GPG keys → New SSH key** — paste the `ecdsa-sha2-nistp256` line.
+Add to GitHub: **Settings → SSH and GPG keys → New SSH key** - paste the `ecdsa-sha2-nistp256` line.
 
 Connect:
 ```bash
@@ -605,7 +605,7 @@ git push
 
 ---
 
-## 13. 2FA / FIDO U2F — Examples
+## 13. 2FA / FIDO U2F - Examples
 
 ### 13.1 GitHub
 
@@ -643,17 +643,17 @@ Ethereum:
 trezorctl ethereum get-address -n "m/44'/60'/0'/0/0"
 ```
 
-Bitcoin — Legacy (P2PKH):
+Bitcoin - Legacy (P2PKH):
 ```bash
 trezorctl btc get-address -n "m/44'/0'/0'/0/0" -t p2pkh
 ```
 
-Bitcoin — SegWit bech32 (P2WPKH) — recommended:
+Bitcoin - SegWit bech32 (P2WPKH) - recommended:
 ```bash
 trezorctl btc get-address -n "m/84'/0'/0'/0/0" -t p2wpkh
 ```
 
-Bitcoin — P2SH-SegWit:
+Bitcoin - P2SH-SegWit:
 ```bash
 trezorctl btc get-address -n "m/49'/0'/0'/0/0" -t p2sh
 ```
@@ -691,7 +691,7 @@ trezorctl clear-session
 
 | Command | Effect |
 |---|---|
-| `clear-session` | Clears host-side session cache and locks the device — PIN required on next access |
+| `clear-session` | Clears host-side session cache and locks the device - PIN required on next access |
 
 ---
 
@@ -746,7 +746,7 @@ trezorctl version
 
 ### 17.2 Trezor USB access on Windows
 
-No udev rules needed — Windows uses WinUSB/libusb via Zadig if the device
+No udev rules needed - Windows uses WinUSB/libusb via Zadig if the device
 is not recognized automatically.
 
 If `trezorctl list` returns nothing:
@@ -778,7 +778,7 @@ wsl --install
 
 **2.** Inside WSL2, follow the Linux setup (Sections 1–6) as normal.
 
-**3.** Configure Git inside WSL2 — commits signed there will show as **Verified** on GitHub.
+**3.** Configure Git inside WSL2 - commits signed there will show as **Verified** on GitHub.
 
 **4. Forward Trezor USB to WSL2 using usbipd:**
 
@@ -834,9 +834,9 @@ trezorctl clear-session
 ```
 Connect Trezor
       ↓
-PIN entry (device matrix — firmware handles this directly)
+PIN entry (device matrix - firmware handles this directly)
       ↓
-Passphrase (if active — entered on host via pinentry or env variable)
+Passphrase (if active - entered on host via pinentry or env variable)
       ↓
 Command executes (signing, address derivation, SSH auth)
 ```
