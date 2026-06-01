@@ -13,6 +13,14 @@ and 2FA using a **Trezor** hardware wallet.
 - Git 2.x
 - `pip3` available
 
+> **Device recommendation for accessibility and terminal/headless use:**
+> **Trezor One** is the best choice for users relying on assistive input devices
+> such as a head mouse, eye tracker, or switch access - and for any terminal or
+> script-based workflow. It is the only Trezor model that allows PIN entry from
+> the terminal via the numeric keypad matrix. All other models (Safe 3, Model T)
+> require PIN entry on the device touchscreen and cannot be used without direct
+> physical touch interaction.
+
 ---
 
 ## 1. Installation
@@ -450,26 +458,32 @@ git commit --no-gpg-sign -m "message"
 
 ### `PIN invalid` error
 Trezor One uses position-based PIN entry. The display shows numbers in random
-order - enter the **position** of each digit on the matrix, not the digit itself:
+order - enter the **position** of each digit on the matrix, not the digit itself.
 
+> This design means PIN entry works entirely via keyboard - making Trezor One
+> compatible with head mice, eye trackers, switch access, and any other
+> assistive input device.
+
+**Fixed reference keypad** (what you type - never changes):
 ```
-Fixed keypad positions (what you type):
   7  8  9
   4  5  6
   1  2  3
 ```
 
-The Trezor display shows a scrambled layout each time, for example:
+**Example scrambled display on the Trezor screen:**
 ```
   3  7  5
   8  2  9
   1  4  6
 ```
 
-To enter a 6-digit PIN, e.g. **2-7-4-9-1-5**, look at the Trezor display
-and find where each digit appears, then type the **fixed keypad position** of that cell:
+**Example: entering the 6-digit PIN 2-7-4-9-1-5**
 
-| PIN digit | Scrambled display cell | Fixed position to type |
+For each PIN digit, find it on the Trezor display and type the key at that
+position on your fixed keypad:
+
+| PIN digit | Where it appears on display | Type this key |
 |---|---|---|
 | 2 | middle-center | `5` |
 | 7 | top-center | `8` |
@@ -478,10 +492,9 @@ and find where each digit appears, then type the **fixed keypad position** of th
 | 1 | bottom-left | `1` |
 | 5 | top-left | `7` |
 
-So you type: `5` `8` `2` `6` `1` `7` - not the digits themselves.
+You type: `5` `8` `2` `6` `1` `7` - not the PIN digits themselves.
 
-The layout changes every time you enter your PIN. Always look at the
-Trezor display, not the keyboard.
+The layout changes every time. Always look at the Trezor display, not the keyboard.
 
 ### `pinentry` / passphrase errors with trezor-agent
 ```bash

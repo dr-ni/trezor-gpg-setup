@@ -9,3 +9,4 @@ if [ -n "$result" ]; then
 else
     echo "Login failed"
 fi
+pkill -f trezor-gpg-agent
