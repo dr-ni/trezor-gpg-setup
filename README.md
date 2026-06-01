@@ -5,28 +5,6 @@ and 2FA using a **Trezor** hardware wallet.
 
 ---
 
-## Architecture Overview
-
-| Layer | Component | Responsibility |
-|---|---|---|
-| Device | Trezor | PIN entry, private key operations, signing |
-| Protocol | trezorctl / python-trezor | Device communication |
-| Wrapper | trezor-agent | SSH / GPG bridge |
-| Host UI | pinentry | Passphrase prompts on host |
-
-> **Key distinction:**
-> - **PIN** - entered via device matrix, handled entirely by Trezor firmware
-> - **Passphrase** - optional, entered on host via pinentry or set via env variable
-> - **pinentry** - affects passphrase and trezor-agent flows only, not PIN
->
-> **Device recommendation for terminal/headless use:**
-> **Trezor One** is the best choice for terminal and script-based workflows.
-> It is the only Trezor model that allows PIN entry from the terminal via the
-> numeric keypad matrix. All other models (Safe 3, Model T) require PIN entry
-> on the device touchscreen and cannot be used headlessly.
-
----
-
 ## Prerequisites
 
 - Trezor hardware wallet
@@ -39,7 +17,53 @@ and 2FA using a **Trezor** hardware wallet.
 
 ## 1. Installation
 
-### 1.1 Install trezor-agent
+### 1.0 Quick install with Makefile
+
+Clone the repository and run `make install` to perform all setup steps automatically:
+
+```bash
+git clone https://github.com/dr-ni/trezor-gpg-setup.git
+```
+
+```bash
+cd trezor-gpg-setup
+```
+
+```bash
+make install
+```
+
+```bash
+source ~/.bashrc
+```
+
+Then continue with Section 3 to generate your GPG key.
+
+Available targets:
+
+```bash
+make help
+```
+
+```
+  make install         Full install (all steps below)
+  make install-deps    Install trezor-agent via pip
+  make install-udev    Install udev rules for USB access
+  make install-env     Add environment variables to ~/.bashrc
+  make install-git     Configure Git for GPG signing
+  make install-scripts Install trezor-login and trezor-logout scripts
+  make uninstall       Remove installed scripts and udev rules
+```
+
+To uninstall:
+
+```bash
+make uninstall
+```
+
+---
+
+### 1.1 Install trezor-agent (manual)
 
 ```bash
 pip3 install trezor-agent --break-system-packages
@@ -624,7 +648,42 @@ git push
 1. **Preferences → Account → Two-Factor Authentication**
 2. **"WebAuthn device"** → Insert Trezor → tap
 
-### 13.4 General flow
+### 13.4 PayPal
+
+> Requires an existing SMS or TOTP-based 2FA method before adding a security key.
+> Complete the registration within 15 seconds - PayPal has an unusually short timeout.
+
+1. Log in to PayPal → **Your Profile**
+2. Click **Update** next to "2-step verification"
+3. Click **Add Device**
+4. Select **"Use a security key"** → **Set Up**
+5. Plug in Trezor and unlock with PIN
+6. Confirm on the Trezor
+7. Name the key → **Done**
+
+Works as 2FA only (second factor alongside password), not passwordless.
+
+### 13.5 Kraken
+
+> Kraken supports FIDO2 for sign-in and Master Key separately.
+> Funding 2FA (withdrawals) only supports Yubico OTP - set up each function separately.
+
+1. **Settings → Security → Two-factor Authentication**
+2. Click **Add Passkey**
+3. Select **"Security key"**
+4. Plug in Trezor and unlock with PIN
+5. Confirm on the Trezor
+6. Name the key → **Save**
+
+You can add up to five passkeys. Repeat for Master Key if needed.
+
+### 13.6 Bitvavo
+
+> Bitvavo does **not** support FIDO2 or hardware security keys.
+> Only TOTP authenticator app and push notification 2FA are available.
+> Trezor cannot be used for Bitvavo 2FA.
+
+### 13.7 General flow
 
 1. Go to the service's security settings
 2. Find **"Security key"**, **"Hardware key"**, or **"FIDO U2F"**
@@ -829,23 +888,102 @@ trezorctl clear-session
 
 ---
 
-## 18. Runtime Flow
+## 18. Email Signing and Encryption
 
-```
-Connect Trezor
-      ↓
-PIN entry (device matrix - firmware handles this directly)
-      ↓
-Passphrase (if active - entered on host via pinentry or env variable)
-      ↓
-Command executes (signing, address derivation, SSH auth)
+### 18.1 Evolution
+
+Evolution supports GPG natively and works directly with the Trezor GPG key.
+
+**Start the agent before launching Evolution:**
+
+```bash
+trezor-gpg agent &
 ```
 
-| Step | Handled by |
-|---|---|
-| PIN matrix display | Trezor firmware |
-| PIN input | User via device buttons / keypad |
-| Passphrase prompt | pinentry (host UI) |
-| Signing / key derivation | Trezor firmware (on-device) |
-| SSH / GPG bridge | trezor-agent |
-| Device communication | trezorctl / python-trezor |
+Or start Evolution with the correct GNUPGHOME:
+
+```bash
+GNUPGHOME=~/.gnupg-trezor evolution &
+```
+
+**Configure Evolution:**
+
+1. **Edit → Accounts**
+2. Select your account → **Edit**
+3. Open the **Security** tab
+4. Enter your fingerprint in **PGP/GPG Key ID**:
+   `0D51A98FB69A6887ED489FC1514E25BFCC1CCF35`
+5. Enable:
+   - **Sign outgoing messages by default**
+   - (optional) **Encrypt outgoing messages by default**
+
+**Verify GNUPGHOME is set:**
+
+```bash
+echo $GNUPGHOME
+```
+
+Expected: `/home/uwe/.gnupg-trezor`
+
+> When sending a signed email, Evolution triggers the Trezor for signing.
+> Trezor One prompts for PIN in the terminal; Safe 3 prompts on the device screen.
+
+---
+
+### 18.2 Thunderbird
+
+Thunderbird uses its own built-in OpenPGP implementation (since version 78).
+It does **not** use the system GPG keyring by default, so the Trezor GPG key
+must be imported manually.
+
+**Export your public key:**
+
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --export --armor \
+  0D51A98FB69A6887ED489FC1514E25BFCC1CCF35 > ~/trezor-gpg-public.asc
+```
+
+**Export your secret key stub** (the stub points to the Trezor, no private key material is exported):
+
+```bash
+GNUPGHOME=~/.gnupg-trezor gpg --export-secret-keys --armor \
+  0D51A98FB69A6887ED489FC1514E25BFCC1CCF35 > ~/trezor-gpg-secret-stub.asc
+```
+
+**Import into Thunderbird:**
+
+1. **Tools → OpenPGP Key Manager**
+2. **File → Import Secret Key(s) From File**
+3. Select `trezor-gpg-secret-stub.asc`
+4. Thunderbird will detect it as an external GnuPG key
+
+**Configure account:**
+
+1. **Account Settings → End-To-End Encryption**
+2. Select your imported key under **OpenPGP**
+3. Enable **Sign unencrypted messages** and/or **Encrypt by default**
+
+> Thunderbird will call the system gpg for signing, which routes through
+> trezor-gpg-agent to the Trezor. Make sure `GNUPGHOME` is set before
+> starting Thunderbird:
+> ```bash
+> GNUPGHOME=~/.gnupg-trezor thunderbird &
+> ```
+
+---
+
+### 18.3 Import recipient's public key (for encryption)
+
+To encrypt to a recipient, import their public key first:
+
+```bash
+gpg --import empfaenger-public.asc
+```
+
+Or fetch from a keyserver:
+
+```bash
+gpg --keyserver keys.openpgp.org --recv-keys RECIPIENT_FINGERPRINT
+```
+
+---
