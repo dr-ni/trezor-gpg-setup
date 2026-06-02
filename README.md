@@ -45,6 +45,10 @@ make install
 source ~/.bashrc
 ```
 
+```bash
+source ~/.profile
+```
+
 Then continue with Section 3 to generate your GPG key.
 
 Available targets:
@@ -85,6 +89,10 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 
 ```bash
 source ~/.bashrc
+```
+
+```bash
+source ~/.profile
 ```
 
 ### 1.3 Verify installation
@@ -142,6 +150,10 @@ echo 'export TREZOR_PASSPHRASE_ON_DEVICE=0' >> ~/.bashrc
 
 ```bash
 source ~/.bashrc
+```
+
+```bash
+source ~/.profile
 ```
 
 > **Note on pinentry:**
@@ -478,7 +490,7 @@ order - enter the **position** of each digit on the matrix, not the digit itself
   1  4  6
 ```
 
-**Example: entering the 6-digit PIN 2-7-4-9-1-5**
+**Example: entering the 6-digit PIN `2` `7` `4` `9` `1` `5`**
 
 For each PIN digit, find it on the Trezor display and type the key at that
 position on your fixed keypad:
