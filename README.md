@@ -1012,3 +1012,147 @@ gpg --keyserver keys.openpgp.org --recv-keys RECIPIENT_FINGERPRINT
 ```
 
 ---
+
+## 19. Router Access (OpenWrt / Dropbear)
+
+OpenWrt ships **Dropbear** instead of OpenSSH. Dropbear's public-key
+verification depends on the build: many embedded/OpenWrt builds are
+compiled **without ECDSA support** (nistp256), even though they may still
+accept ECDSA host keys for the server side. If a Trezor-derived `nistp256`
+key is silently rejected and Dropbear falls back to password auth, check
+for ECDSA support first:
+
+```bash
+strings /usr/sbin/dropbear | grep -i ecdsa
+```
+
+Empty output means no ECDSA client-auth support - use **ed25519** instead.
+
+### 19.1 Generate an ed25519 key for the router
+
+```bash
+trezor-agent -v "ssh://root@openwrt" -e ed25519 > ~/.ssh/trezor_ed25519_openwrt.pub
+cat ~/.ssh/trezor_ed25519_openwrt.pub
+```
+
+> **Note:** the identity string (`ssh://root@openwrt`) is deterministic - the
+> same Trezor with the same identity string reproduces the same key on every
+> machine. There is no need to generate a separate key per client machine;
+> the same public key can be installed once on the router and used from any
+> machine running `trezor-agent` with that identity.
+
+### 19.2 Install the key on the router
+
+```bash
+mkdir -p /etc/dropbear
+echo "ssh-ed25519 AAAA...your-key... ssh://root@openwrt" >> /etc/dropbear/authorized_keys
+chmod 600 /etc/dropbear/authorized_keys
+/etc/init.d/dropbear restart
+```
+
+### 19.3 Test before disabling password auth
+
+**Keep the current session open** and test the key from a **new** terminal:
+
+```bash
+trezor-agent -v "ssh://root@openwrt" -e ed25519 -- ssh root@OpenWrt
+```
+
+Confirm on the Trezor device when prompted. Only proceed to 19.4 once this
+succeeds without a password prompt.
+
+### 19.4 Disable password authentication
+
+In `/etc/config/dropbear`:
+
+```
+option PasswordAuth 'off'
+option RootPasswordAuth 'off'
+```
+
+```bash
+/etc/init.d/dropbear restart
+```
+
+Test again from a new terminal before closing the original session - if the
+key does not work, you may lock yourself out of password fallback.
+
+### 19.5 Shell aliases
+
+```bash
+alias ssh-openwrt='trezor-agent -v "ssh://root@openwrt" -e ed25519 -- ssh root@OpenWrt'
+alias tunnel-openwrt='trezor-agent -v "ssh://root@openwrt" -e ed25519 -- ssh -L 8443:127.0.0.1:443 -N root@OpenWrt'
+```
+
+Add both to `~/.bashrc` on every machine that needs router access, then:
+
+```bash
+source ~/.bashrc
+```
+
+- `ssh-openwrt` - direct shell login to the router
+- `tunnel-openwrt` - opens a local tunnel to the router's HTTPS port for
+  LuCI access (blocks the terminal; stop with Ctrl+C)
+
+### 19.6 Gating LuCI access through the SSH tunnel
+
+LuCI itself has no hardware-key login - it authenticates with the system
+root password over HTTP Basic Auth. To require Trezor confirmation before
+LuCI is even reachable, bind `uhttpd` to localhost only and access it
+exclusively through the SSH tunnel from 19.5:
+
+```bash
+uci delete uhttpd.main.listen_http
+uci delete uhttpd.main.listen_https
+uci add_list uhttpd.main.listen_http='127.0.0.1:80'
+uci add_list uhttpd.main.listen_https='127.0.0.1:443'
+uci commit uhttpd
+/etc/init.d/uhttpd restart
+```
+
+> **Warning:** this removes direct LAN access to LuCI from any device without
+> the Trezor SSH key. Verify the tunnel (19.5) works **before** applying this,
+> or you may need physical/console access to revert it.
+
+After this, reach LuCI via:
+
+```bash
+tunnel-openwrt
+```
+
+then open `https://localhost:8443` in a browser.
+
+### 19.7 Troubleshooting: key accepted by agent but rejected by server
+
+If `ssh -v` shows the key being offered but the server still falls back to
+password, compare fingerprints on both sides:
+
+```bash
+ssh-keygen -lf ~/.ssh/trezor_ed25519_openwrt.pub
+```
+
+On Dropbear (limited `ssh-keygen`, no `-lf` flag):
+
+```bash
+dropbearkey -y -f /etc/dropbear/dropbear_ed25519_host_key
+```
+
+If fingerprints match but auth still fails, the most common cause is a
+missing/incompatible signature algorithm on the server, confirmed by an
+empty result from `strings /usr/sbin/dropbear | grep -i ecdsa` (Section 19).
+Re-generate the agent key with `-e ed25519` (Section 19.1) rather than the
+default curve.
+
+### 19.8 Browser autofill limitation for LuCI
+
+Chromium does not reliably offer to save credentials for HTTP Basic Auth
+dialogs (used by LuCI), unlike form-based logins. Manually adding an entry
+under `chrome://settings/passwords` may also fail if the URL field rejects
+a port number. Workarounds:
+
+- Try saving the entry as just `localhost` (without scheme/port)
+- Use an external password manager (e.g. KeePassXC with its browser
+  extension), which generally handles Basic Auth autofill more reliably
+  than Chromium's built-in manager
+
+---
